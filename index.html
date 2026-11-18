@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Weatherman</title>
+<meta name="description" content="Daily conditions for Meta advertisers. Is it the weather, or is it you?">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M3 13.5a9 9 0 0 1 18 0'/%3E%3Cpath d='M8 13.5a4 4 0 0 1 8 0'/%3E%3Cpath d='M2.5 18h19'/%3E%3Cpath d='M7.5 22h9'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;450;500;550;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+</head>
+<body>
+<div class="sample" id="sample" hidden>Sample data. Synthetic numbers for design review only, not real market conditions.</div>
+<nav class="nav"><div class="wrap nav-in">
+  <a class="logo" href="/" aria-label="Meta Weatherman home"><span id="logo" style="display:flex"></span><span class="logo-word">Meta Weatherman</span></a>
+  <div class="nav-r">
+    <div class="seg" role="group" aria-label="Theme"><button data-theme-btn="light">Light</button><button data-theme-btn="dark">Dark</button></div>
+  </div>
+</div></nav>
+
+<main class="wrap">
+  <header class="hero">
+    <h1>Is it storming on Meta?</h1>
+    <div class="now">
+      <div class="now-top">
+        <div class="now-sky" id="now-sky"></div>
+        <p class="result" id="result" aria-live="polite"></p>
+      </div>
+      <button class="now-alert" id="now-alert" hidden></button>
+      <div class="now-tray"><span>Compared with each brand's own baseline.</span><div class="now-chips" id="now-chips"></div></div>
+    </div>
+  </header>
+
+  <section class="sec" id="conditions" aria-labelledby="cond-h">
+    <div class="sec-head">
+      <div><h2 id="cond-h">Daily conditions</h2><p>Hover the chart to move through the days. Shaded days are storms.</p></div>
+      <button class="link-btn" id="to-latest" hidden>Back to latest &rarr;</button>
+    </div>
+    <div class="stage">
+      <div class="window">
+        <div class="week" id="week" aria-live="polite"></div>
+        <div class="toolbar">
+          <div class="seg" id="metrics" role="group" aria-label="Metric"></div>
+          <div class="seg" id="ranges" role="group" aria-label="Date range"><button data-range="30">30 days</button><button data-range="90" class="active">90 days</button><button data-range="365">1 year</button><button data-range="all">All</button></div>
+        </div>
+        <div class="chart-title" id="chart-title"></div>
+        <div class="chart-wrap"><canvas id="chart" role="img" aria-label="Daily conditions chart"></canvas><div class="chart-empty" id="chart-empty" hidden></div></div>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="log-sec" aria-labelledby="log-h">
+    <div class="sec-head">
+      <div><h2 id="log-h">Storm log</h2><p>Every storm day and Meta platform issue, newest first. Select one to see it on the chart.</p></div>
+      <div class="seg" id="log-filter" role="group" aria-label="Show"><button data-f="all" class="active">All</button><button data-f="storm">Storms</button><button data-f="issue">Platform issues</button></div>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section class="sec" id="periods" aria-labelledby="periods-h">
+    <div class="sec-head">
+      <div><h2 id="periods-h">By period</h2><p>Storm days, CPA against baseline and average CPM for each period.</p></div>
+      <div class="seg" id="units" role="group" aria-label="Period"><button data-unit="week">Week</button><button data-unit="month" class="active">Month</button><button data-unit="quarter">Quarter</button></div>
+    </div>
+    <div class="tablewrap"><table id="period-table"></table></div>
+  </section>
+
+  <p class="proof">Percentages compare each brand with its own baseline using total Meta ad account results (1-day click). Brand names and individual results are never shown.</p>
+
+  <footer class="foot"><span id="foot-date"></span><span>&copy; 2026 Meta Weatherman. Not affiliated with or endorsed by Meta Platforms, Inc.</span></footer>
+</main>
+<dialog class="inc-modal" id="inc-modal" aria-labelledby="inc-title">
+  <div class="inc-head"><h2 id="inc-title">Platform issue</h2><button class="inc-x" data-close aria-label="Close">&#10005;</button></div>
+  <div class="inc-body" id="inc-body"></div>
+</dialog>
+<script src="/assets/brand.js"></script>
+<script src="/assets/app.js"></script>
+</body>
+</html>
