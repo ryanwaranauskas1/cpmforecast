@@ -28,14 +28,16 @@
         <div class="now-sky" id="now-sky"></div>
         <p class="result" id="result" aria-live="polite"></p>
       </div>
+      <div class="now-gauge" id="now-gauge" hidden></div>
+      <p class="now-compare" id="now-compare"></p>
       <button class="now-alert" id="now-alert" hidden></button>
-      <div class="now-tray"><span>Compared with each brand's own baseline.</span><div class="now-chips" id="now-chips"></div></div>
+      <div class="now-tray"><span>CPM change is the last 7 days against the 7 before. Other figures are against each brand's own baseline.</span><div class="now-chips" id="now-chips"></div></div>
     </div>
   </header>
 
   <section class="sec" id="conditions" aria-labelledby="cond-h">
     <div class="sec-head">
-      <div><h2 id="cond-h">Daily conditions</h2><p>Hover the chart to move through the days. Shaded days are storms.</p></div>
+      <div><h2 id="cond-h">Daily conditions</h2><p>Hover the chart to move through the days. Shaded days are storms: CPMs up 5% or more on the prior week (Severe at 15%).</p></div>
       <button class="link-btn" id="to-latest" hidden>Back to latest &rarr;</button>
     </div>
     <div class="stage">
@@ -62,13 +64,13 @@
 
   <section class="sec" id="periods" aria-labelledby="periods-h">
     <div class="sec-head">
-      <div><h2 id="periods-h">By period</h2><p>Storm days, CPA against baseline and average CPM for each period.</p></div>
+      <div><h2 id="periods-h">By period</h2><p>Each period is rated by its average CPM against the prior period, on the same tiers as a day. Storm days counts the days inside it.</p></div>
       <div class="seg" id="units" role="group" aria-label="Period"><button data-unit="week">Week</button><button data-unit="month" class="active">Month</button><button data-unit="quarter">Quarter</button></div>
     </div>
     <div class="tablewrap"><table id="period-table"></table></div>
   </section>
 
-  <p class="proof">Percentages compare each brand with its own baseline using total Meta ad account results (1-day click). Brand names and individual results are never shown.</p>
+  <p class="proof">The weather is set by CPM: each brand's last 7 days against its own prior 7 days, then the median brand. Clear is below 0%, Cloudy 0 to 5%, Storm 5 to 15%, Severe 15% or more. Other percentages compare each brand with its own 28-day baseline, using total Meta ad account results (1-day click). Brand names and individual results are never shown.</p>
 
   <footer class="foot"><span id="foot-date"></span><span>&copy; 2026 Meta Weatherman. Not affiliated with or endorsed by Meta Platforms, Inc.</span></footer>
 </main>

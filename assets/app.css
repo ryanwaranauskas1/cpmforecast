@@ -1,4 +1,4 @@
-:root{--bg:#fafafa;--text:#0a0a0a;--muted:#4b5563;--muted2:#6b7280;--surface:#fff;--tray:#f5f5f5;--surface2:#f0f0f0;--hover:#f5f5f5;--border:#e5e5e5;--accent:#2a2a2a;--on-accent:#fff;--bar:#292929;--sun:#d97706;--fair:#3b82f6;--storm:#f59e0b;--severe:#ef4444;--better:#15803d;--worse:#b91c1c;--grid:#efefef;--tick:#6b7280;--line-storm:rgba(109,40,217,.65);--line-severe:rgba(109,40,217,.4);--pill-fair-bg:#eff6ff;--pill-fair-bd:#bfdbfe;--pill-fair:#1d4ed8;--pill-storm-bg:#fffbeb;--pill-storm-bd:#fde68a;--pill-storm:#b45309;--pill-severe-bg:#fef2f2;--pill-severe-bd:#fecaca;--pill-severe:#b91c1c;--shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -12px rgba(0,0,0,.12);--band-storm:rgba(245,158,11,.22);--band-severe:rgba(239,68,68,.24);color-scheme:light}
+:root{--bg:#fafafa;--text:#0a0a0a;--muted:#4b5563;--muted2:#6b7280;--surface:#fff;--tray:#f5f5f5;--surface2:#f0f0f0;--hover:#f5f5f5;--border:#e5e5e5;--accent:#2a2a2a;--on-accent:#fff;--bar:#292929;--sun:#d97706;--fair:#3b82f6;--storm:#f59e0b;--severe:#ef4444;--cloudy:#9ca3af;--better:#15803d;--worse:#b91c1c;--grid:#efefef;--tick:#6b7280;--line-storm:rgba(109,40,217,.65);--line-severe:rgba(109,40,217,.4);--pill-fair-bg:#eff6ff;--pill-fair-bd:#bfdbfe;--pill-fair:#1d4ed8;--pill-storm-bg:#fffbeb;--pill-storm-bd:#fde68a;--pill-storm:#b45309;--pill-severe-bg:#fef2f2;--pill-severe-bd:#fecaca;--pill-severe:#b91c1c;--shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -12px rgba(0,0,0,.12);--band-storm:rgba(245,158,11,.22);--band-severe:rgba(239,68,68,.24);color-scheme:light}
 :root[data-theme="dark"]{--bg:#0a0a0a;--text:#fafafa;--muted:#a3a3a3;--muted2:#8a8a8a;--surface:#171717;--tray:#1f1f1f;--surface2:#262626;--hover:#222;--border:rgba(255,255,255,.1);--accent:#fafafa;--on-accent:#171717;--bar:#1c1c1c;--sun:#fbbf24;--better:#4ade80;--worse:#f87171;--grid:#262626;--tick:#a3a3a3;--line-storm:rgba(196,181,253,.75);--line-severe:rgba(196,181,253,.45);--pill-fair-bg:rgba(59,130,246,.15);--pill-fair-bd:rgba(59,130,246,.35);--pill-fair:#93c5fd;--pill-storm-bg:rgba(245,158,11,.14);--pill-storm-bd:rgba(245,158,11,.35);--pill-storm:#fcd34d;--pill-severe-bg:rgba(239,68,68,.15);--pill-severe-bd:rgba(239,68,68,.35);--pill-severe:#fca5a5;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -12px rgba(0,0,0,.6);--band-storm:rgba(245,158,11,.2);--band-severe:rgba(239,68,68,.24);color-scheme:dark}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;scroll-padding-top:72px}
@@ -34,6 +34,8 @@ h1{font-size:56px;font-weight:400;letter-spacing:-.015em;line-height:1.15;color:
 .good{color:var(--better)}.bad{color:var(--worse)}
 .pill{display:inline-block;font-size:11px;font-weight:500;line-height:1.5;padding:0 7px;border-radius:99px;border:1px solid var(--border);background:var(--tray);color:var(--muted);white-space:nowrap}
 .pill.FAIR{background:var(--pill-fair-bg);border-color:var(--pill-fair-bd);color:var(--pill-fair)}
+.pill.CLOUDY{background:var(--tray);border-color:var(--border);color:var(--muted)}
+.day.CLOUDY .day-sky,.now-sky.CLOUDY{filter:grayscale(.85) brightness(.92)}
 .pill.STORM{background:var(--pill-storm-bg);border-color:var(--pill-storm-bd);color:var(--pill-storm)}
 .pill.SEVERE{background:var(--pill-severe-bg);border-color:var(--pill-severe-bd);color:var(--pill-severe)}
 
@@ -137,3 +139,12 @@ tr.partial td:first-child small{display:inline}
 .log-nums b{font-weight:500;margin-left:3px}
 .log-more{display:block;width:100%;border:0;border-top:1px solid var(--border);background:var(--tray);padding:9px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
 @media (max-width:640px){.log-row{grid-template-columns:1fr auto;row-gap:4px}.log-what{grid-column:1/-1;order:3}.log-nums{grid-column:1/-1;order:4}}
+.now-gauge{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 14px 2px;font-size:12px;color:var(--muted2);font-variant-numeric:tabular-nums}
+.now-gauge[hidden]{display:none}
+.now-gauge .g-label{grid-column:1/-1;font-size:13px;color:var(--muted)}
+.now-gauge .g-label b{color:var(--text);font-weight:500}
+.g-track{position:relative;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--fair),var(--cloudy) 50%,var(--storm) 80%,var(--severe))}
+.g-mark{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--text);transform:translate(-50%,-50%)}
+.now-compare{padding:0 14px 10px;font-size:13px;color:var(--muted)}
+.now-compare b{color:var(--text);font-weight:500}
+.storm-days{display:block;font-size:11px;color:var(--muted2);margin-top:2px}

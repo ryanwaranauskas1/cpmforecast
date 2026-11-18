@@ -1,12 +1,13 @@
 (function () {
   const METRICS = {
     cpm: { name: 'CPM', title: 'Average CPM', higherIsWorse: true },
+    cpm_wow: { name: 'CPM change', chip: 'CPM vs prior week', title: 'CPM, last 7 days against the 7 days before (median brand). This sets the weather.', higherIsWorse: true, line: true },
     cpa: { name: 'CPA', title: 'CPA against each brand\'s own baseline', higherIsWorse: true },
     spend: { name: 'Spend', title: 'Spend against each brand\'s own baseline', neutral: true },
     roas: { name: 'ROAS', title: 'ROAS against each brand\'s own baseline', higherIsWorse: false },
     ctr: { name: 'CTR', title: 'Click-through rate against each brand\'s own baseline', higherIsWorse: false }
   };
-  const CHIPS = ['cpa', 'cpm', 'spend', 'roas', 'ctr'];
+  const CHIPS = ['cpm_wow', 'cpa', 'spend', 'roas', 'ctr'];
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const LOG_PAGE = 12;
   const $ = id => document.getElementById(id);
@@ -20,6 +21,8 @@
   const signed = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + '%';
   const money = v => v == null ? '—' : '$' + v.toFixed(2);
   const cpm = d => d && d.usd ? d.usd.cpm : null;
+  const cpm7 = d => d && d.usd && d.usd.cpm7 != null ? d.usd.cpm7 : null;
+  const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
   const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
   const isStorm = d => d.status === 'STORM' || d.status === 'SEVERE';
   function tone(m, v) {
@@ -74,23 +77,43 @@
   // Headline: fixed to the latest full day, phrased as today.
   function headline(d) {
     $('now-sky').style.backgroundImage = 'url(' + MW.sky[d ? d.status : 'CALIBRATING'] + ')';
+    $('now-sky').className = 'now-sky ' + (d ? d.status : '');
     let text;
+    const w = d ? d.pct.cpm_wow : null;
     if (!d) text = "We're still calibrating. The first reading arrives " + MW.fmtDate(D.station.first_percentages) + '.';
+    else if (w == null) text = 'Meta today: ' + money(cpm(d)) + ' CPM. Storm ratings start ' + MW.fmtDate(D.station.first_status) + '.';
     else {
-      const f = signed(d.pct.cpa) + ' average CPA, ' + signed(d.pct.cpm) + ' CPM' + (cpm(d) != null ? ' (' + money(cpm(d)) + ')' : '') + '.';
-      text = d.status === 'SEVERE' ? 'Severe storms on Meta today with ' + f
-        : d.status === 'STORM' ? 'Storms on Meta today with ' + f
-        : d.status === 'FAIR' ? 'Clear skies on Meta today with ' + (d.pct.cpa > 0 ? 'only ' : '') + f
-        : 'Meta today: ' + f + ' Storm ratings start ' + MW.fmtDate(D.station.first_status) + '.';
+      const sky = { SEVERE: 'Severe storms on Meta today.', STORM: 'Storms on Meta today.', CLOUDY: 'Cloudy on Meta today.', FAIR: 'Clear skies on Meta today.' }[d.status];
+      const move = w > 0 ? 'CPMs are up ' + w + '% on the prior week' : w < 0 ? 'CPMs are down ' + Math.abs(w) + '% on the prior week' : 'CPMs are flat on the prior week';
+      const level = cpm7(d) != null ? ', averaging ' + money(cpm7(d)) : '';
+      const cpa = d.pct.cpa;
+      const tail = cpa == null ? '' : (w >= 5 && cpa <= -3) ? ' CPA is ' + signed(cpa) + ' against baseline, so it is expensive but still converting.'
+        : (w >= 5 && cpa >= 5) ? ' CPA is up too, ' + signed(cpa) + ' against baseline.'
+        : (w < 5 && cpa >= 5) ? ' Reach is not much pricier, but CPA is ' + signed(cpa) + ' against baseline.' : '';
+      text = sky + ' ' + move + level + '.' + tail;
     }
     $('result').textContent = text;
-    $('now-chips').innerHTML = CHIPS.map(m => '<span><b>' + METRICS[m].name + '</b><span class="' + tone(m, d ? d.pct[m] : null) + '">' + signed(d ? d.pct[m] : null) + '</span>' + (m === 'cpm' && cpm(d) != null ? '<i>' + money(cpm(d)) + '</i>' : '') + '</span>').join('');
+    gauge(d);
+    const wk = w == null ? '' : w > 0 ? '+' + w + '%' : w + '%';
+    $('now-compare').innerHTML = w == null ? '' : '<b>Compare your account:</b> in Ads Manager, choose Last 7 days and compare with the previous period. ' +
+      'If your CPM moved more than ' + esc(wk) + ', it is more than the market.';
+    $('now-chips').innerHTML = CHIPS.map(m => '<span><b>' + (METRICS[m].chip || METRICS[m].name) + '</b><span class="' + tone(m, d ? d.pct[m] : null) + '">' + signed(d ? d.pct[m] : null) + '</span>' + (m === 'cpm_wow' && cpm7(d) != null ? '<i>' + money(cpm7(d)) + '</i>' : '') + '</span>').join('');
     const alert = $('now-alert');
     alert.hidden = !hasInc(d);
     if (hasInc(d)) {
       alert.innerHTML = '<span aria-hidden="true">&#9888;</span><span>Meta reported a platform issue on this day: ' + esc(d.incidents.map(incTitle).join(', ')) + '.</span><u>Details</u>';
       alert.onclick = () => openIncidents(d, dayName(d), 'day');
     }
+  }
+
+  // Where the latest 7-day CPM sits in the trailing year.
+  function gauge(d) {
+    const g = $('now-gauge');
+    g.hidden = !(d && d.rank != null && D.year && cpm7(d) != null);
+    if (g.hidden) return;
+    const pos = Math.min(100, Math.max(0, (cpm7(d) - D.year.lo) / ((D.year.hi - D.year.lo) || 1) * 100));
+    g.innerHTML = '<span class="g-label">7-day CPM of <b>' + money(cpm7(d)) + '</b> is higher than <b>' + d.rank + '%</b> of the past year' + (d.rank >= 90 ? ', near the top of the range' : '') + '.</span>' +
+      '<span>' + money(D.year.lo) + '</span><span class="g-track" role="img" aria-label="' + ordinal(d.rank) + ' percentile of the past year"><span class="g-mark" style="left:' + pos.toFixed(1) + '%"></span></span><span>' + money(D.year.hi) + '</span>';
   }
 
   // Seven day cards around the selected day. The selected day moves as you hover the chart.
@@ -154,12 +177,13 @@
     }
     canvas.style.visibility = ''; empty.hidden = true;
     const css = MW.css, grid = css('--grid'), tick = css('--tick'), font = { size: 11, family: 'Geist, sans-serif' };
-    const dotColor = d => d.status === 'SEVERE' ? css('--severe') : d.status === 'STORM' ? css('--storm') : css('--fair');
+    const dotColor = d => d.status === 'SEVERE' ? css('--severe') : d.status === 'STORM' ? css('--storm') : d.status === 'CLOUDY' ? css('--cloudy') : css('--fair');
+    const asLine = !!METRICS[metric].line;
     const colors = items.map(dotColor);
     const small = items.length > 200 ? 1.8 : items.length > 45 ? 2.6 : 3.5;
     const datasets = [
-      { label: 'Daily', data: values, showLine: false, pointRadius: items.map(d => isStorm(d) ? small + 1 : small), pointHoverRadius: 5, pointBackgroundColor: colors, pointBorderColor: colors, order: 2 },
-      { label: '7-day average', data: rolling7(days.map(value)).slice(offset), borderColor: css('--sun'), borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 0, tension: .35, spanGaps: true, order: 1 }
+      { label: 'Daily', data: values, showLine: asLine, borderColor: css('--sun'), borderWidth: 2, tension: .3, spanGaps: true, pointRadius: items.map(d => isStorm(d) ? small + 1 : small), pointHoverRadius: 5, pointBackgroundColor: colors, pointBorderColor: colors, order: 2 },
+      { label: '7-day average', hidden: asLine, data: rolling7(days.map(value)).slice(offset), borderColor: css('--sun'), borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 0, tension: .35, spanGaps: true, order: 1 }
     ];
     const bands = {
       id: 'stormBands',
@@ -173,6 +197,14 @@
           const px = x.getPixelForValue(i), l = Math.max(a.left, px - step / 2), r = Math.min(a.right, px + step / 2);
           ctx.fillRect(l, a.top, Math.max(r - l, 3), a.bottom - a.top);
         });
+        if (asLine && D.thresholds) {
+          const y = c.scales.y;
+          [['storm', '--line-storm'], ['severe', '--line-severe']].forEach(([k, col]) => {
+            const py = y.getPixelForValue(D.thresholds[k]);
+            if (py < a.top || py > a.bottom) return;
+            ctx.beginPath(); ctx.moveTo(a.left, py); ctx.lineTo(a.right, py); ctx.setLineDash([5, 4]); ctx.strokeStyle = css(col); ctx.lineWidth = 1.2; ctx.stroke();
+          });
+        }
         ctx.restore();
       }
     };
@@ -217,6 +249,7 @@
             callbacks: {
               title: els => dayName(items[els[0].dataIndex]) + ', ' + items[els[0].dataIndex].date.slice(0, 4),
               label: el => (el.dataset.label === '7-day average' ? '7-day average' : METRICS[metric].name) + ': ' + fmt(el.raw),
+              filter: el => !(asLine && el.datasetIndex === 1),
               afterBody: els => { const d = items[els[0].dataIndex]; return [MW.label[d.status]].concat(hasInc(d) ? ['⚠ Platform issue: ' + incSummary(d)] : []); },
               footer: els => hasInc(items[els[0].dataIndex]) ? 'Click for details' : ''
             }
@@ -231,10 +264,11 @@
         }
       }
     });
-    $('legend').innerHTML = '<span><i class="dot" style="background:' + css('--fair') + '"></i>Daily</span><span><i class="lline"></i>7-day average</span>' +
+    $('legend').innerHTML = '<span><i class="dot" style="background:' + css('--fair') + '"></i>Clear</span><span><i class="dot" style="background:' + css('--cloudy') + '"></i>Cloudy</span>' +
+      (asLine ? '<span>Dashed lines: Storm +' + D.thresholds.storm + '%, Severe +' + D.thresholds.severe + '%</span>' : '<span><i class="lline"></i>7-day average</span>') +
       '<span><i class="band" style="background:' + css('--band-storm') + '"></i>Storm</span><span><i class="band" style="background:' + css('--band-severe') + '"></i>Severe</span>' +
       (items.some(hasInc) ? '<span><span class="inc-mark">&#9650;</span>Platform issue (click)</span>' : '') +
-      (metric === 'cpm' ? '' : '<span>0% is each brand\'s baseline</span>');
+      (metric === 'cpm' ? '' : metric === 'cpm_wow' ? '<span>0% is no change on the prior week</span>' : '<span>0% is each brand\'s baseline</span>');
   }
 
   // Jump to a day from elsewhere on the page, widening the chart range if the day is outside it.
@@ -263,10 +297,10 @@
     $('log').innerHTML = list.map(d => {
       const tags = (isStorm(d) ? '<span class="pill ' + d.status + '">' + MW.label[d.status] + '</span>' : '') +
         (hasInc(d) ? '<span class="pill sev-' + esc(d.incidents[0].severity || 'Medium') + '">Platform issue</span>' : '');
-      const what = hasInc(d) ? esc(incSummary(d)) + ' · <u data-inc="' + d.date + '">Details</u>' : 'CPA ' + signed(d.pct.cpa) + ' against baseline';
+      const what = hasInc(d) ? esc(incSummary(d)) + ' · <u data-inc="' + d.date + '">Details</u>' : 'CPM ' + signed(d.pct.cpm_wow) + ' on the prior week';
       return '<div class="log-row" role="button" tabindex="0" data-date="' + d.date + '"><span class="log-date">' + dayName(d) + '<small>' + d.date.slice(0, 4) + '</small></span>' +
         '<span class="log-tags">' + tags + '</span><span class="log-what">' + what + '</span>' +
-        '<span class="log-nums">CPA<b class="' + tone('cpa', d.pct.cpa) + '">' + signed(d.pct.cpa) + '</b> · CPM<b>' + money(cpm(d)) + '</b></span></div>';
+        '<span class="log-nums">CPM wk<b class="' + tone('cpm_wow', d.pct.cpm_wow) + '">' + signed(d.pct.cpm_wow) + '</b> · CPA<b class="' + tone('cpa', d.pct.cpa) + '">' + signed(d.pct.cpa) + '</b> · CPM<b>' + money(cpm(d)) + '</b></span></div>';
     }).join('') + (all.length > LOG_PAGE ? '<button class="log-more" id="log-more">' + (logAll ? 'Show fewer' : 'Show all ' + all.length) + '</button>' : '');
     $('log').querySelectorAll('.log-row').forEach(r => {
       r.onclick = e => { if (e.target.closest('[data-inc]')) { openDay(r.dataset.date); return; } goTo(r.dataset.date); };
@@ -279,15 +313,15 @@
   function table() {
     const list = D.periods[unit] || [];
     const rows = list.map((p, i) => {
-      const prev = i ? cpm(list[i - 1]) : null, cur = cpm(p);
-      const change = prev && cur ? Math.round((cur / prev - 1) * 100) : null;
+      const cur = cpm(p), change = p.pct.cpm_prior ?? null;
       const note = p.end > D.updated ? '<small>to date</small>' : p.days < p.span ? '<small>partial</small>' : '';
-      const weather = p.status === 'CALIBRATING' ? '<span class="pill">Calibrating</span>' : '<span class="pill ' + (p.storm_days ? p.status : 'FAIR') + '">' + (p.storm_days ? plural(p.storm_days, 'storm day') : 'Clear') + '</span>';
+      const weather = p.status === 'CALIBRATING' || change == null ? '<span class="pill">Calibrating</span>' : '<span class="pill ' + p.status + '">' + MW.label[p.status] + '</span>' +
+        '<small class="storm-days">' + (p.storm_days ? plural(p.storm_days, 'storm day') : 'no storm days') + '</small>';
       const flag = hasInc(p) ? '<button class="inc-flag" data-i="' + i + '" title="Platform issue reported" aria-label="' + plural(p.incidents.length, 'platform issue') + ' reported in ' + periodName(p, unit) + ', view details">&#9888;</button>' : '';
-      return '<tr><td>' + periodName(p, unit) + note + '</td><td>' + weather + flag + '</td><td class="' + tone('cpa', p.pct.cpa) + '">' + signed(p.pct.cpa) + '</td><td>' + money(cur) + '</td><td class="' + tone('cpm', change) + '">' + (change == null ? '—' : signed(change)) + '</td></tr>';
+      return '<tr><td>' + periodName(p, unit) + note + '</td><td>' + weather + flag + '</td><td>' + money(cur) + '</td><td class="' + tone('cpm', change) + '">' + (change == null ? '—' : signed(change)) + '</td><td class="' + tone('cpa', p.pct.cpa) + '">' + signed(p.pct.cpa) + '</td></tr>';
     }).reverse();
     const word = { week: 'week', month: 'month', quarter: 'quarter' }[unit];
-    $('period-table').innerHTML = '<thead><tr><th>' + word[0].toUpperCase() + word.slice(1) + '</th><th>Weather</th><th>CPA vs baseline</th><th>Avg CPM</th><th>CPM vs prior ' + word + '</th></tr></thead><tbody>' +
+    $('period-table').innerHTML = '<thead><tr><th>' + word[0].toUpperCase() + word.slice(1) + '</th><th>Weather</th><th>Avg CPM</th><th>CPM vs prior ' + word + '</th><th>CPA vs baseline</th></tr></thead><tbody>' +
       (rows.length ? rows.join('') : '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No readings yet</td></tr>') + '</tbody>';
     $('period-table').querySelectorAll('.inc-flag').forEach(b => b.onclick = () => { const p = list[+b.dataset.i]; openIncidents(p, periodName(p, unit), word); });
   }
