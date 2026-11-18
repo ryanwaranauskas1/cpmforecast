@@ -315,7 +315,7 @@
         (hasInc(d) ? '<span class="pill sev-' + esc(d.incidents[0].severity || 'Medium') + '">Platform issue</span>' : '');
       const what = hasInc(d) ? esc(incSummary(d)) + ' · <u data-inc="' + d.date + '">Details</u>' : 'CPM ' + signed(wow(d, 'cpm')) + ' on the prior week' + (yoy(d, 'cpm') != null ? ', ' + signed(yoy(d, 'cpm')) + ' on last year' : '');
       return '<div class="log-row" role="button" tabindex="0" data-date="' + d.date + '"><span class="log-date">' + dayName(d) + '<small>' + d.date.slice(0, 4) + '</small></span>' +
-        '<span class="log-tags">' + tags + '</span><span class="log-what">' + what + '</span>' +
+        '<span class="log-tags">' + tags + '</span><span class="log-what' + (hasInc(d) ? '' : ' plain') + '">' + what + '</span>' +
         '<span class="log-nums">CPM wk<b class="' + tone('cpm', wow(d, 'cpm')) + '">' + signed(wow(d, 'cpm')) + '</b> · CPA wk<b class="' + tone('cpa', wow(d, 'cpa')) + '">' + signed(wow(d, 'cpa')) + '</b> · CPM<b>' + money(cpm(d)) + '</b></span></div>';
     }).join('') + (all.length > LOG_PAGE ? '<button class="log-more" id="log-more">' + (logAll ? 'Show fewer' : 'Show all ' + all.length) + '</button>' : '');
     $('log').querySelectorAll('.log-row').forEach(r => {
@@ -334,7 +334,7 @@
       const weather = p.status === 'CALIBRATING' || change == null ? '<span class="pill">Calibrating</span>' : pill(p.status) +
         '<small class="storm-days">' + (p.storm_days ? plural(p.storm_days, 'storm day') : 'no storm days') + '</small>';
       const flag = hasInc(p) ? '<button class="inc-flag" data-i="' + i + '" title="Platform issue reported" aria-label="' + plural(p.incidents.length, 'platform issue') + ' reported in ' + periodName(p, unit) + ', view details">&#9888;</button>' : '';
-      return '<tr><td>' + periodName(p, unit) + note + '</td><td>' + weather + flag + '</td><td>' + money(cur) + '</td>' + [['cpm', wow], ['cpm', yoy], ['cpa', wow], ['cpa', yoy]].map(([m, f]) => '<td class="' + tone(m, f(p, m)) + '">' + signed(f(p, m)) + '</td>').join('') + '</tr>';
+      return '<tr><td class="p-name">' + periodName(p, unit) + note + '</td><td class="p-sky">' + weather + flag + '</td><td data-label="Avg CPM">' + money(cur) + '</td>' + [['cpm', wow, 'CPM wk'], ['cpm', yoy, 'CPM yr'], ['cpa', wow, 'CPA wk'], ['cpa', yoy, 'CPA yr']].map(([m, f, l]) => '<td data-label="' + (unit === 'week' ? l : l.replace('wk', 'prior')) + '" class="' + tone(m, f(p, m)) + '">' + signed(f(p, m)) + '</td>').join('') + '</tr>';
     }).reverse();
     const word = { week: 'week', month: 'month', quarter: 'quarter' }[unit];
     $('period-table').innerHTML = '<thead><tr><th>' + word[0].toUpperCase() + word.slice(1) + '</th><th>Weather</th><th>Avg CPM</th><th>CPM vs prior ' + word + '</th><th>CPM vs last year</th><th>CPA vs prior ' + word + '</th><th>CPA vs last year</th></tr></thead><tbody>' +

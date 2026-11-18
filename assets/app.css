@@ -182,3 +182,19 @@ tr.partial td:first-child small{display:inline}
 .now-foot{padding:12px 22px 16px;font-size:12px;color:var(--muted2)}
 .now-alert{border-radius:0}
 @media (max-width:640px){.now-status{font-size:26px}.now-status span{display:block;font-size:16px;margin-top:2px}.big-v{font-size:32px}.now-metrics{grid-template-columns:repeat(2,1fr);padding:14px 14px 4px}.now-gauge{padding:16px 14px 4px}.now-foot{padding:12px 14px 14px}}
+
+/* phones: period table becomes cards, log rows tighten */
+@media (max-width:640px){
+  .now-sky{padding:24px 16px 20px}.now-icon{font-size:44px}.now-verdict{font-size:15px}
+  .big-tile{padding:14px 8px}.big-l{font-size:12px}
+  .log-what.plain{display:none}.log-date small{display:inline;margin-left:5px}
+  .tablewrap{overflow:visible;border:0;background:none;box-shadow:none}
+  #period-table,#period-table tbody{display:block}
+  #period-table thead{display:none}
+  #period-table tr{display:grid;grid-template-columns:repeat(5,1fr);gap:10px 6px;margin-bottom:10px;padding:14px;border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+  #period-table td{display:flex;flex-direction:column;gap:1px;padding:0;border:0;text-align:left;font-variant-numeric:tabular-nums;font-weight:500;white-space:normal}
+  #period-table td[data-label]::before{content:attr(data-label);font-size:11px;font-weight:400;color:var(--muted2)}
+  #period-table td.p-name{grid-column:1/4;font-size:16px;align-self:center}
+  #period-table td.p-sky{grid-column:4/6;align-items:flex-end;text-align:right;font-weight:400}
+  #period-table td[colspan]{grid-column:1/-1;text-align:center}
+}
