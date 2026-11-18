@@ -24,13 +24,16 @@
   <header class="hero">
     <h1>Is it storming on Meta?</h1>
     <div class="now">
-      <div class="now-top">
-        <div class="now-sky" id="now-sky"></div>
-        <p class="result" id="result" aria-live="polite"></p>
+      <div class="now-sky" id="now-sky">
+        <span class="now-icon" id="now-icon" aria-hidden="true"></span>
+        <p class="now-status" id="now-status"></p>
+        <p class="now-verdict" id="result" aria-live="polite"></p>
       </div>
+      <div class="now-big" id="now-big" hidden></div>
       <div class="now-gauge" id="now-gauge" hidden></div>
+      <div class="now-metrics" id="now-chips"></div>
+      <p class="now-foot">Last 7 days vs the 7 before and the same week last year · median brand</p>
       <button class="now-alert" id="now-alert" hidden></button>
-      <div class="now-tray"><span>Last 7 days against the 7 before and the same 7 days last year, median brand.</span><div class="now-chips" id="now-chips"></div></div>
     </div>
   </header>
 

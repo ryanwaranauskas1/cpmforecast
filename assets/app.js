@@ -79,28 +79,41 @@
 
   // Headline: fixed to the latest full day, phrased as today.
   function headline(d) {
-    $('now-sky').style.backgroundImage = 'url(' + MW.sky[d ? d.status : 'CALIBRATING'] + ')';
-    $('now-sky').className = 'now-sky ' + (d ? d.status : '');
-    let text;
+    const st = d ? d.status : 'CALIBRATING';
+    const sky = $('now-sky');
+    sky.style.backgroundImage = 'url(' + MW.sky[st] + ')';
+    sky.className = 'now-sky ' + st;
+    $('now-icon').textContent = MW.icon[st] || '🛰️';
     const w = wow(d, 'cpm'), y = yoy(d, 'cpm');
-    if (!d) text = "We're still calibrating. The first reading arrives " + MW.fmtDate(D.station.first_percentages) + '.';
-    else if (w == null) text = 'Meta today: ' + money(cpm(d)) + ' CPM. Storm ratings start ' + MW.fmtDate(D.station.first_status) + '.';
+    const rated = d && w != null;
+    $('now-status').innerHTML = rated
+      ? { SEVERE: 'Severe storms', STORM: 'Storms', CLOUDY: 'Cloudy', FAIR: 'Clear skies' }[st] + '<span> on Meta today</span>'
+      : 'Calibrating';
+    let text;
+    if (!d) text = 'The first reading arrives ' + MW.fmtDate(D.station.first_percentages) + '.';
+    else if (!rated) text = money(cpm(d)) + ' CPM today. Storm ratings start ' + MW.fmtDate(D.station.first_status) + '.';
     else {
-      const sky = { SEVERE: 'Severe storms on Meta today.', STORM: 'Storms on Meta today.', CLOUDY: 'Cloudy on Meta today.', FAIR: 'Clear skies on Meta today.' }[d.status];
-      const move = w > 0 ? 'CPMs are up ' + w + '% on the prior week' : w < 0 ? 'CPMs are down ' + Math.abs(w) + '% on the prior week' : 'CPMs are flat on the prior week';
-      const year = y == null ? '' : ' and ' + (y > 0 ? 'up ' + y + '%' : y < 0 ? 'down ' + Math.abs(y) + '%' : 'flat') + ' on the same week last year';
-      const level = cpm7(d) != null ? ', averaging ' + money(cpm7(d)) : '';
+      text = w >= 15 ? 'Ads cost far more than last week.' : w >= 5 ? 'Ads cost more than last week.' : w > 0 ? 'Ads cost a little more than last week.' : w < 0 ? 'Ads are cheaper than last week.' : 'Ad prices are flat on last week.';
       const cpa = wow(d, 'cpa');
-      const tail = cpa == null ? '' : (w >= 5 && cpa <= -3) ? ' CPA is ' + signed(cpa) + ' on the prior week, so it is expensive but still converting.'
-        : (w >= 5 && cpa >= 5) ? ' CPA is up too, ' + signed(cpa) + ' on the prior week.'
-        : (w < 5 && cpa >= 5) ? ' Reach is not much pricier, but CPA is ' + signed(cpa) + ' on the prior week.' : '';
-      text = sky + ' ' + move + year + level + '.' + tail;
+      if (cpa != null) {
+        if (w >= 5 && cpa <= -3) text += ' But CPA is down, so it still converts.';
+        else if (w >= 5 && cpa >= 5) text += ' CPA is up too.';
+        else if (w < 5 && cpa >= 5) text += ' But CPA is up ' + cpa + '%.';
+      }
     }
     $('result').textContent = text;
+
+    const big = $('now-big');
+    big.hidden = !rated;
+    if (rated) {
+      const tile = (v, label) => '<div class="big-tile"><span class="big-v ' + tone('cpm', v) + '">' + (v == null ? '–' : signed(v)) + '</span><span class="big-l">CPM ' + label + '</span></div>';
+      big.innerHTML = tile(w, 'vs prior week') + tile(y, 'vs last year');
+    }
     gauge(d);
-    const row = (label, get) => '<tr><th scope="row">' + label + '</th>' + CHIPS.map(m => '<td class="' + tone(m, get(d, m)) + '">' + signed(get(d, m)) + '</td>').join('') + '</tr>';
-    $('now-chips').innerHTML = '<table class="cmp"><thead><tr><th></th>' + CHIPS.map(m => '<th scope="col">' + METRICS[m].name + '</th>').join('') + '</tr></thead><tbody>' +
-      row('vs prior week', wow) + row('vs last year', yoy) + '</tbody></table>';
+    $('now-chips').innerHTML = rated ? CHIPS.filter(m => m !== 'cpm').map(m =>
+      '<div class="m-tile"><span class="m-name">' + METRICS[m].name + '</span>' +
+      '<span class="m-v ' + tone(m, wow(d, m)) + '">' + signed(wow(d, m)) + '<i>wk</i></span>' +
+      '<span class="m-y ' + tone(m, yoy(d, m)) + '">' + signed(yoy(d, m)) + '<i>yr</i></span></div>').join('') : '';
     const alert = $('now-alert');
     alert.hidden = !hasInc(d);
     if (hasInc(d)) {
@@ -115,7 +128,7 @@
     g.hidden = !(d && d.rank != null && D.year && cpm7(d) != null);
     if (g.hidden) return;
     const pos = Math.min(100, Math.max(0, (cpm7(d) - D.year.lo) / ((D.year.hi - D.year.lo) || 1) * 100));
-    g.innerHTML = '<span class="g-label">7-day CPM of <b>' + money(cpm7(d)) + '</b> is higher than <b>' + d.rank + '%</b> of the past year' + (d.rank >= 90 ? ', near the top of the range' : '') + '.</span>' +
+    g.innerHTML = '<span class="g-label"><b>' + money(cpm7(d)) + '</b> avg CPM · pricier than <b>' + d.rank + '%</b> of the past year</span>' +
       '<span>' + money(D.year.lo) + '</span><span class="g-track" role="img" aria-label="' + ordinal(d.rank) + ' percentile of the past year"><span class="g-mark" style="left:' + pos.toFixed(1) + '%"></span></span><span>' + money(D.year.hi) + '</span>';
   }
 
