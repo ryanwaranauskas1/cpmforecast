@@ -35,7 +35,18 @@ h1{font-size:56px;font-weight:400;letter-spacing:-.015em;line-height:1.15;color:
 .pill{display:inline-block;font-size:11px;font-weight:500;line-height:1.5;padding:0 7px;border-radius:99px;border:1px solid var(--border);background:var(--tray);color:var(--muted);white-space:nowrap}
 .pill.FAIR{background:var(--pill-fair-bg);border-color:var(--pill-fair-bd);color:var(--pill-fair)}
 .pill.CLOUDY{background:var(--tray);border-color:var(--border);color:var(--muted)}
-.day.CLOUDY .day-sky,.now-sky.CLOUDY{filter:grayscale(.85) brightness(.92)}
+.day-sky,.now-sky{position:relative;overflow:hidden}
+.day-sky::before,.now-sky::before{content:"";position:absolute;inset:0;border-radius:inherit}
+.day-sky::after,.now-sky::after{position:absolute;right:5px;bottom:3px;font-size:20px;z-index:1;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.now-sky::after{right:50%;bottom:50%;transform:translate(50%,50%);font-size:28px}
+.FAIR>.day-sky::after,.now-sky.FAIR::after{content:"☀️"}
+.CLOUDY>.day-sky::after,.now-sky.CLOUDY::after{content:"☁️"}
+.STORM>.day-sky::after,.now-sky.STORM::after{content:"⛈️"}
+.SEVERE>.day-sky::after,.now-sky.SEVERE::after{content:"⚡"}
+.day.CLOUDY .day-sky::before,.now-sky.CLOUDY::before{background:rgba(120,128,140,.45);backdrop-filter:grayscale(1)}
+.day.STORM .day-sky::before,.now-sky.STORM::before{background:linear-gradient(180deg,rgba(15,23,42,.78),rgba(30,41,59,.55) 55%,rgba(217,119,6,.45));backdrop-filter:grayscale(.6) contrast(1.3)}
+.day.SEVERE .day-sky::before,.now-sky.SEVERE::before{background:linear-gradient(180deg,rgba(24,6,24,.8),rgba(88,28,52,.6) 50%,rgba(220,38,38,.55));backdrop-filter:contrast(1.4)}
+.pill .pi{margin-right:3px;font-size:10px}
 .pill.STORM{background:var(--pill-storm-bg);border-color:var(--pill-storm-bd);color:var(--pill-storm)}
 .pill.SEVERE{background:var(--pill-severe-bg);border-color:var(--pill-severe-bd);color:var(--pill-severe)}
 
@@ -145,6 +156,9 @@ tr.partial td:first-child small{display:inline}
 .now-gauge .g-label b{color:var(--text);font-weight:500}
 .g-track{position:relative;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--fair),var(--cloudy) 50%,var(--storm) 80%,var(--severe))}
 .g-mark{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--surface);border:3px solid var(--text);transform:translate(-50%,-50%)}
-.now-compare{padding:0 14px 10px;font-size:13px;color:var(--muted)}
-.now-compare b{color:var(--text);font-weight:500}
 .storm-days{display:block;font-size:11px;color:var(--muted2);margin-top:2px}
+.cmp{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px}
+.cmp th,.cmp td{padding:2px 0 2px 14px;text-align:right;font-weight:500;color:var(--text)}
+.cmp thead th{font-weight:400;color:var(--muted2);font-size:12px}
+.cmp tbody th{font-weight:400;color:var(--muted2);text-align:left;padding-left:0}
+.cmp td.good{color:var(--better)}.cmp td.bad{color:var(--worse)}
